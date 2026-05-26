@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { connectionStatusCopy } from './uiCopy';
+import { unavailableServiceCopy } from './uiCopy';
 
 describe('interface copy', () => {
-  it('uses product language for the connection status', () => {
-    expect(connectionStatusCopy.label).toBe('Synchronisation');
-    expect(connectionStatusCopy.value).toBe('Serveur securise');
-    expect(connectionStatusCopy.label).not.toMatch(/backend/i);
+  it('does not expose technical connection status as a dashboard field', () => {
+    const visibleCopy = Object.values(unavailableServiceCopy).join(' ');
+
+    expect(visibleCopy).not.toMatch(/backend|serveur|synchronisation/i);
   });
 });

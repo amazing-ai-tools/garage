@@ -29,7 +29,7 @@ import {
   Vehicle,
 } from './garage';
 import { getInitialTheme, themeStorageKey, toggleTheme, ThemeMode } from './theme';
-import { connectionStatusCopy, unavailableServiceCopy } from './uiCopy';
+import { unavailableServiceCopy } from './uiCopy';
 import './styles.css';
 
 const bugzeroAppKey = import.meta.env.VITE_BUGZERO_APP_KEY || '';
@@ -399,11 +399,7 @@ function App() {
       <section className="race-strip" aria-label="Etat garage">
         <div>
           <span>Carnet</span>
-          <strong>{isLoading ? 'Synchronisation' : 'A jour'}</strong>
-        </div>
-        <div>
-          <span>{connectionStatusCopy.label}</span>
-          <strong>{connectionStatusCopy.value}</strong>
+          <strong>{isLoading ? 'Chargement' : 'A jour'}</strong>
         </div>
         <div>
           <span>Profil</span>
