@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildApiUrl, createApiRequest, formatEuros, getCostPerKm } from './garage';
+import { buildApiUrl, createApiRequest, formatEuros, getCostPerKm, preferencesPayload } from './garage';
 
 describe('garage helpers', () => {
   it('builds API URLs without duplicate slashes', () => {
@@ -19,5 +19,13 @@ describe('garage helpers', () => {
 
   it('sends credentials with API requests for the session cookie', () => {
     expect(createApiRequest({ method: 'POST' }).credentials).toBe('include');
+  });
+
+  it('serializes user preferences for the API', () => {
+    expect(preferencesPayload({ language: 'es', country: 'MX', currency: 'MXN' })).toEqual({
+      language: 'es',
+      country: 'MX',
+      currency: 'MXN',
+    });
   });
 });

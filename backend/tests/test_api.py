@@ -65,6 +65,24 @@ def test_auth_me_returns_current_google_user():
     }
 
 
+def test_user_can_save_profile_preferences():
+    client = authenticated_client()
+
+    default_response = client.get("/api/preferences")
+
+    assert default_response.status_code == 200
+    assert default_response.json() == {"language": "fr-CA", "country": "CA", "currency": "CAD"}
+
+    update_response = client.put(
+        "/api/preferences",
+        json={"language": "pt", "country": "BR", "currency": "BRL"},
+    )
+
+    assert update_response.status_code == 200
+    assert update_response.json() == {"language": "pt", "country": "BR", "currency": "BRL"}
+    assert client.get("/api/preferences").json() == {"language": "pt", "country": "BR", "currency": "BRL"}
+
+
 def test_create_vehicle_and_list_it_with_summary_totals():
     client = authenticated_client()
 

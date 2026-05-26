@@ -91,3 +91,9 @@ class CurrentUser(BaseModel):
     email: str
     name: str | None
     avatar_url: str | None
+
+
+class UserPreferences(BaseModel):
+    language: str = Field(pattern="^(en|fr-CA|pt|es)$")
+    country: str = Field(pattern="^(CA|US|FR|BR|PT|ES|MX)$")
+    currency: str = Field(pattern="^(CAD|USD|EUR|BRL|MXN)$")

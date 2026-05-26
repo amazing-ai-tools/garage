@@ -31,6 +31,7 @@ from backend.app.schemas import (
     PartChangeRead,
     ReminderCreate,
     ReminderRead,
+    UserPreferences,
     VehicleCreate,
     VehicleRead,
     VehicleSummary,
@@ -120,6 +121,26 @@ def auth_logout(
             db.delete(session)
             db.commit()
     clear_session_cookie(response, settings)
+
+
+@app.get("/api/preferences", response_model=UserPreferences)
+def get_preferences(user: User = Depends(require_user)) -> UserPreferences:
+    return UserPreferences(language=user.language, country=user.country, currency=user.currency)
+
+
+@app.put("/api/preferences", response_model=UserPreferences)
+def update_preferences(
+    payload: UserPreferences,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_user),
+) -> UserPreferences:
+    user.language = payload.language
+    user.country = payload.country
+    user.currency = payload.currency
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return UserPreferences(language=user.language, country=user.country, currency=user.currency)
 
 
 @app.post("/api/vehicles", response_model=VehicleRead, status_code=status.HTTP_201_CREATED)

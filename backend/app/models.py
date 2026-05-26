@@ -39,6 +39,9 @@ class User(TimestampMixin, Base):
     email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     name: Mapped[str | None] = mapped_column(String(160))
     avatar_url: Mapped[str | None] = mapped_column(Text)
+    language: Mapped[str] = mapped_column(String(12), nullable=False, default="fr-CA", server_default="fr-CA")
+    country: Mapped[str] = mapped_column(String(2), nullable=False, default="CA", server_default="CA")
+    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="CAD", server_default="CAD")
 
     vehicles: Mapped[list[Vehicle]] = relationship(back_populates="user", cascade="all, delete-orphan")
     sessions: Mapped[list["SessionToken"]] = relationship(back_populates="user", cascade="all, delete-orphan")

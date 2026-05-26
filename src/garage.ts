@@ -1,3 +1,5 @@
+import { UserPreferences } from './preferences';
+
 export type Vehicle = {
   id: number;
   name: string;
@@ -141,6 +143,25 @@ export async function loadGarageData(apiBaseUrl: string): Promise<GarageData> {
   ]);
 
   return { summary, vehicles, expenses, parts, reminders };
+}
+
+export function preferencesPayload(preferences: UserPreferences): UserPreferences {
+  return {
+    language: preferences.language,
+    country: preferences.country,
+    currency: preferences.currency,
+  };
+}
+
+export function loadUserPreferences(apiBaseUrl: string): Promise<UserPreferences> {
+  return request<UserPreferences>(apiBaseUrl, '/api/preferences');
+}
+
+export function saveUserPreferences(apiBaseUrl: string, preferences: UserPreferences): Promise<UserPreferences> {
+  return request<UserPreferences>(apiBaseUrl, '/api/preferences', {
+    method: 'PUT',
+    body: JSON.stringify(preferencesPayload(preferences)),
+  });
 }
 
 export function createGarageRecord<TPayload, TResult>(
