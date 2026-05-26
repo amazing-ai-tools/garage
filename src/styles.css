@@ -53,6 +53,17 @@ h2 {
   margin-bottom: 28px;
 }
 
+.topbar-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.user-line {
+  margin: 10px 0 0;
+  color: #5c6678;
+  font-weight: 650;
+}
+
 button,
 input,
 select {
@@ -82,6 +93,50 @@ button:disabled {
   background: #fff;
   color: #263d32;
   border: 1px solid #d9d2c6;
+}
+
+.auth-shell {
+  display: grid;
+  place-items: center;
+}
+
+.auth-panel {
+  width: min(100%, 560px);
+  padding: 34px;
+  background: #fff;
+  border: 1px solid #ded8ce;
+  border-radius: 8px;
+  box-shadow: 0 16px 38px rgba(63, 54, 41, 0.08);
+}
+
+.auth-panel h1 {
+  font-size: clamp(2rem, 5vw, 3.4rem);
+}
+
+.auth-panel p {
+  color: #5c6678;
+  line-height: 1.55;
+}
+
+.auth-panel code {
+  display: block;
+  margin: 14px 0;
+  overflow-wrap: anywhere;
+  color: #8f2f24;
+}
+
+.login-button {
+  min-height: 46px;
+  margin-top: 18px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 8px;
+  background: #263d32;
+  color: #fff;
+  font-weight: 750;
+  text-decoration: none;
 }
 
 .metric-grid,
@@ -219,6 +274,10 @@ select {
 
   .topbar {
     align-items: flex-start;
+  }
+
+  .topbar-actions {
+    flex-direction: column;
   }
 
   .metric-grid,

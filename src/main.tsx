@@ -5,17 +5,23 @@ import {
   Car,
   CircleDollarSign,
   Gauge,
+  LogIn,
+  LogOut,
   PackageCheck,
   Plus,
   RefreshCw,
   Wrench,
 } from 'lucide-react';
 import {
+  buildApiUrl,
   createGarageRecord,
+  CurrentUser,
   formatEuros,
   GarageData,
   getCostPerKm,
+  loadCurrentUser,
   loadGarageData,
+  logout,
   Vehicle,
 } from './garage';
 import './styles.css';
@@ -122,6 +128,8 @@ function VehicleSelect({
 }
 
 function App() {
+  const [currentUser, setCurrentUser] = React.useState<CurrentUser | null>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = React.useState(true);
   const [data, setData] = React.useState<GarageData | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -152,8 +160,31 @@ function App() {
   }, []);
 
   React.useEffect(() => {
-    refresh();
+    async function bootstrap() {
+      setIsCheckingAuth(true);
+      setError(null);
+      try {
+        const user = await loadCurrentUser(apiBaseUrl);
+        setCurrentUser(user);
+        if (user) {
+          await refresh();
+        }
+      } catch (authError) {
+        setError(authError instanceof Error ? authError.message : 'Erreur auth inconnue');
+      } finally {
+        setIsCheckingAuth(false);
+        setIsLoading(false);
+      }
+    }
+
+    bootstrap();
   }, [refresh]);
+
+  async function submitLogout() {
+    await logout(apiBaseUrl);
+    setCurrentUser(null);
+    setData(null);
+  }
 
   async function submitVehicle(event: React.FormEvent) {
     event.preventDefault();
@@ -206,16 +237,51 @@ function App() {
   const summary = data?.summary;
   const firstVehicle = summary?.vehicles[0];
 
+  if (isCheckingAuth) {
+    return (
+      <main className="app-shell auth-shell">
+        <section className="auth-panel">
+          <span className="eyebrow">Garage connecte</span>
+          <h1>Verification de la session</h1>
+          <p>Connexion au backend garage...</p>
+        </section>
+      </main>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <main className="app-shell auth-shell">
+        <section className="auth-panel">
+          <span className="eyebrow">Garage prive</span>
+          <h1>Connecte-toi avec Google</h1>
+          <p>Ton parc, tes depenses, tes pieces et tes rappels restent associes a ton compte.</p>
+          {error ? <code>{error}</code> : null}
+          <a className="login-button" href={buildApiUrl(apiBaseUrl, '/api/auth/google/login')}>
+            <LogIn size={18} />
+            Continuer avec Google
+          </a>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className="app-shell">
       <header className="topbar">
         <div>
           <span className="eyebrow">Garage connecte</span>
           <h1>Suivi vehicules, pieces et entretiens</h1>
+          <p className="user-line">{currentUser.name || currentUser.email}</p>
         </div>
-        <button className="icon-button" type="button" onClick={refresh} aria-label="Rafraichir">
-          <RefreshCw size={18} />
-        </button>
+        <div className="topbar-actions">
+          <button className="icon-button" type="button" onClick={refresh} aria-label="Rafraichir">
+            <RefreshCw size={18} />
+          </button>
+          <button className="icon-button" type="button" onClick={submitLogout} aria-label="Se deconnecter">
+            <LogOut size={18} />
+          </button>
+        </div>
       </header>
 
       {error ? (

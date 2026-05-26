@@ -8,6 +8,7 @@ pieces changees et rappels de maintenance.
 - Frontend: React 18, TypeScript, Vite, CSS simple.
 - Backend: FastAPI, SQLAlchemy, Alembic.
 - Database: PostgreSQL via `DATABASE_URL` (production actuelle: Postgres dedie sur le VPS, expose en localhost).
+- Auth: Google OAuth gere par le backend, session en cookie `HttpOnly`.
 - Deploy frontend: Azure Static Web Apps.
 - Deploy backend: VPS, typiquement avec `uvicorn` derriere un reverse proxy.
 
@@ -19,11 +20,22 @@ Ne jamais committer `.env`.
 ```bash
 DATABASE_URL=postgresql+psycopg://garage_user:change-me@10.0.0.10:5432/garage
 CORS_ORIGINS=https://garage.app.amazing-ai.tools,http://localhost:5173
+APP_ORIGIN=https://garage.app.amazing-ai.tools
+API_PUBLIC_ORIGIN=https://api.garage.app.amazing-ai.tools
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+SESSION_SECRET=...
+SESSION_COOKIE_SECURE=true
 VITE_API_BASE_URL=https://api.garage.app.amazing-ai.tools
 ```
 
 Le frontend lit uniquement `VITE_API_BASE_URL`. Il ne doit jamais se connecter
 directement a PostgreSQL.
+
+Google Cloud OAuth doit autoriser:
+
+- Authorized JavaScript origin: `https://garage.app.amazing-ai.tools`
+- Authorized redirect URI: `https://api.garage.app.amazing-ai.tools/api/auth/google/callback`
 
 ## Backend local
 

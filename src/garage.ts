@@ -61,6 +61,12 @@ export type GarageData = {
   reminders: Reminder[];
 };
 
+export type CurrentUser = {
+  email: string;
+  name: string | null;
+  avatar_url: string | null;
+};
+
 export function buildApiUrl(baseUrl: string, path: string): string {
   return `${baseUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
 }
@@ -84,10 +90,17 @@ export function getCostPerKm(totalExpenses: string | number, odometerKm: number)
   })} EUR/km`;
 }
 
+export function createApiRequest(init: RequestInit = {}): RequestInit {
+  return {
+    credentials: 'include',
+    ...init,
+    headers: { 'Content-Type': 'application/json', ...init.headers },
+  };
+}
+
 async function request<T>(apiBaseUrl: string, path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(buildApiUrl(apiBaseUrl, path), {
-    headers: { 'Content-Type': 'application/json', ...init?.headers },
-    ...init,
+    ...createApiRequest(init),
   });
 
   if (!response.ok) {
@@ -95,6 +108,27 @@ async function request<T>(apiBaseUrl: string, path: string, init?: RequestInit):
   }
 
   return response.json() as Promise<T>;
+}
+
+export async function loadCurrentUser(apiBaseUrl: string): Promise<CurrentUser | null> {
+  const response = await fetch(buildApiUrl(apiBaseUrl, '/api/auth/me'), createApiRequest());
+  if (response.status === 401) {
+    return null;
+  }
+  if (!response.ok) {
+    throw new Error(`API ${response.status}: ${await response.text()}`);
+  }
+  return response.json() as Promise<CurrentUser>;
+}
+
+export async function logout(apiBaseUrl: string): Promise<void> {
+  const response = await fetch(
+    buildApiUrl(apiBaseUrl, '/api/auth/logout'),
+    createApiRequest({ method: 'POST' }),
+  );
+  if (!response.ok) {
+    throw new Error(`API ${response.status}: ${await response.text()}`);
+  }
 }
 
 export async function loadGarageData(apiBaseUrl: string): Promise<GarageData> {

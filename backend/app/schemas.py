@@ -85,3 +85,9 @@ class GarageSummary(BaseModel):
     total_expenses: Decimal
     open_reminder_count: int
     vehicles: list[VehicleSummary]
+
+
+class CurrentUser(BaseModel):
+    email: str
+    name: str | None
+    avatar_url: str | None

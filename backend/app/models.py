@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, Numeric, String, func
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, Numeric, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.database import Base
@@ -18,6 +18,7 @@ class Vehicle(TimestampMixin, Base):
     __tablename__ = "vehicles"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     make: Mapped[str] = mapped_column(String(80), nullable=False)
     model: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -27,6 +28,30 @@ class Vehicle(TimestampMixin, Base):
     expenses: Mapped[list["Expense"]] = relationship(back_populates="vehicle", cascade="all, delete-orphan")
     parts: Mapped[list["PartChange"]] = relationship(back_populates="vehicle", cascade="all, delete-orphan")
     reminders: Mapped[list["Reminder"]] = relationship(back_populates="vehicle", cascade="all, delete-orphan")
+    user: Mapped["User | None"] = relationship(back_populates="vehicles")
+
+
+class User(TimestampMixin, Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    google_sub: Mapped[str] = mapped_column(String(120), nullable=False, unique=True, index=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str | None] = mapped_column(String(160))
+    avatar_url: Mapped[str | None] = mapped_column(Text)
+
+    vehicles: Mapped[list[Vehicle]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    sessions: Mapped[list["SessionToken"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+
+
+class SessionToken(TimestampMixin, Base):
+    __tablename__ = "sessions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    token_hash: Mapped[str] = mapped_column(String(128), nullable=False, unique=True, index=True)
+
+    user: Mapped[User] = relationship(back_populates="sessions")
 
 
 class Expense(TimestampMixin, Base):

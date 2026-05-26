@@ -2,13 +2,36 @@ from decimal import Decimal
 
 from fastapi.testclient import TestClient
 
+from backend.app.auth import create_session
 from backend.app.database import Base, engine
 from backend.app.main import app
+from backend.app.models import User
 
 
 def reset_database() -> None:
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+
+
+def authenticated_client() -> TestClient:
+    reset_database()
+    client = TestClient(app)
+    with client:
+        from backend.app.database import SessionLocal
+
+        with SessionLocal() as db:
+            user = User(
+                google_sub="google-user-1",
+                email="owner@example.com",
+                name="Garage Owner",
+                avatar_url="https://example.com/avatar.png",
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            session = create_session(db, user)
+            client.cookies.set("garage_session", session.token, domain="testserver.local")
+    return client
 
 
 def test_health_check_reports_database_status():
@@ -20,9 +43,30 @@ def test_health_check_reports_database_status():
     assert response.json() == {"status": "ok", "database": "ok"}
 
 
-def test_create_vehicle_and_list_it_with_summary_totals():
+def test_garage_endpoints_require_authenticated_session():
     reset_database()
-    client = TestClient(app)
+
+    response = TestClient(app).get("/api/vehicles")
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Authentication required"
+
+
+def test_auth_me_returns_current_google_user():
+    client = authenticated_client()
+
+    response = client.get("/api/auth/me")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "email": "owner@example.com",
+        "name": "Garage Owner",
+        "avatar_url": "https://example.com/avatar.png",
+    }
+
+
+def test_create_vehicle_and_list_it_with_summary_totals():
+    client = authenticated_client()
 
     vehicle_response = client.post(
         "/api/vehicles",
