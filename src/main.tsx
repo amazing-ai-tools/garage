@@ -29,6 +29,7 @@ import {
   Vehicle,
 } from './garage';
 import { getInitialTheme, themeStorageKey, toggleTheme, ThemeMode } from './theme';
+import { connectionStatusCopy, unavailableServiceCopy } from './uiCopy';
 import './styles.css';
 
 const bugzeroAppKey = import.meta.env.VITE_BUGZERO_APP_KEY || '';
@@ -389,8 +390,8 @@ function App() {
 
       {error ? (
         <section className="notice error">
-          <strong>API indisponible.</strong>
-          <span>Verifie que le backend VPS est lance et que VITE_API_BASE_URL pointe dessus.</span>
+          <strong>{unavailableServiceCopy.title}</strong>
+          <span>{unavailableServiceCopy.message}</span>
           <code>{error}</code>
         </section>
       ) : null}
@@ -401,8 +402,8 @@ function App() {
           <strong>{isLoading ? 'Synchronisation' : 'A jour'}</strong>
         </div>
         <div>
-          <span>Backend</span>
-          <strong>{apiBaseUrl.replace(/^https?:\/\//, '')}</strong>
+          <span>{connectionStatusCopy.label}</span>
+          <strong>{connectionStatusCopy.value}</strong>
         </div>
         <div>
           <span>Profil</span>
