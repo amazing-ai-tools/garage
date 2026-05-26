@@ -8,12 +8,13 @@ import {
   Gauge,
   LogIn,
   LogOut,
+  Moon,
   PackageCheck,
   Plus,
   RefreshCw,
   ShieldCheck,
+  Sun,
   Wrench,
-  Zap,
 } from 'lucide-react';
 import {
   buildApiUrl,
@@ -27,6 +28,7 @@ import {
   logout,
   Vehicle,
 } from './garage';
+import { getInitialTheme, themeStorageKey, toggleTheme, ThemeMode } from './theme';
 import './styles.css';
 
 const bugzeroAppKey = import.meta.env.VITE_BUGZERO_APP_KEY || '';
@@ -127,6 +129,37 @@ function getInitials(user: CurrentUser): string {
     .join('');
 }
 
+function readSystemThemePreference(): boolean {
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+}
+
+function useThemeMode() {
+  const [theme, setTheme] = React.useState<ThemeMode>(() =>
+    getInitialTheme(window.localStorage.getItem(themeStorageKey), readSystemThemePreference()),
+  );
+
+  React.useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem(themeStorageKey, theme);
+  }, [theme]);
+
+  return {
+    theme,
+    toggle: () => setTheme((currentTheme) => toggleTheme(currentTheme)),
+  };
+}
+
+function ThemeToggle({ theme, onToggle }: { theme: ThemeMode; onToggle: () => void }) {
+  const isDark = theme === 'dark';
+
+  return (
+    <button className="theme-toggle" type="button" onClick={onToggle} aria-label="Changer le theme">
+      {isDark ? <Sun size={17} /> : <Moon size={17} />}
+      <span>{isDark ? 'Mode clair' : 'Mode sombre'}</span>
+    </button>
+  );
+}
+
 function VehicleSelect({
   vehicles,
   value,
@@ -149,6 +182,7 @@ function VehicleSelect({
 }
 
 function App() {
+  const { theme, toggle } = useThemeMode();
   const [currentUser, setCurrentUser] = React.useState<CurrentUser | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = React.useState(true);
   const [data, setData] = React.useState<GarageData | null>(null);
@@ -263,10 +297,13 @@ function App() {
     return (
       <main className="app-shell auth-shell">
         <section className="auth-panel loading-card">
-          <span className="brand-mark">G</span>
-          <span className="eyebrow">Garage sport</span>
+          <div className="auth-mini-top">
+            <span className="brand-mark">G</span>
+            <ThemeToggle theme={theme} onToggle={toggle} />
+          </div>
+          <span className="eyebrow">Atelier prive</span>
           <h1>Verification de la session</h1>
-          <p>Connexion securisee au paddock...</p>
+          <p>Connexion securisee a ton carnet de garage...</p>
           <div className="loading-bar" aria-hidden="true" />
         </section>
       </main>
@@ -278,12 +315,15 @@ function App() {
       <main className="app-shell auth-shell">
         <section className="auth-hero">
           <div className="auth-copy">
-            <span className="brand-mark">G</span>
-            <span className="eyebrow">Garage sport</span>
-            <h1>Ton cockpit pour suivre chaque machine.</h1>
+            <div className="auth-mini-top">
+              <span className="brand-mark">G</span>
+              <ThemeToggle theme={theme} onToggle={toggle} />
+            </div>
+            <span className="eyebrow">Atelier prive</span>
+            <h1>Le carnet clair de tous tes vehicules.</h1>
             <p>
-              Centralise vehicules, couts, pieces et rappels dans une interface rapide, securisee
-              par ton compte Google.
+              Suis entretiens, pieces, depenses et rappels dans un espace calme, lisible et
+              accessible depuis ton compte Google.
             </p>
             {error ? <code>{error}</code> : null}
             <a className="login-button" href={buildApiUrl(apiBaseUrl, '/api/auth/google/login')}>
@@ -293,12 +333,13 @@ function App() {
           </div>
           <aside className="auth-dashboard" aria-label="Apercu garage">
             <div className="dash-topline">
-              <span>Track mode</span>
-              <strong>ONLINE</strong>
+              <span>Carnet garage</span>
+              <strong>A JOUR</strong>
             </div>
-            <div className="speed-ring">
-              <span>87</span>
-              <small>score entretien</small>
+            <div className="journal-card">
+              <span>Prochaine echeance</span>
+              <strong>Controle technique</strong>
+              <small>Dans 18 jours - Ford Transit</small>
             </div>
             <div className="auth-stat-grid">
               <span>
@@ -326,12 +367,13 @@ function App() {
         <div className="brand-cluster">
           <span className="brand-mark">G</span>
           <div>
-            <span className="eyebrow">Garage sport</span>
-            <h1>Controle vehicules, pieces et entretiens</h1>
+            <span className="eyebrow">Atelier prive</span>
+            <h1>Tableau de bord garage</h1>
             <p className="user-line">Pilote: {userLabel}</p>
           </div>
         </div>
         <div className="topbar-actions">
+          <ThemeToggle theme={theme} onToggle={toggle} />
           <span className="session-pill">
             <ShieldCheck size={16} />
             Session Google
@@ -355,8 +397,8 @@ function App() {
 
       <section className="race-strip" aria-label="Etat garage">
         <div>
-          <span>Mode atelier</span>
-          <strong>{isLoading ? 'Synchronisation' : 'Pret a rouler'}</strong>
+          <span>Carnet</span>
+          <strong>{isLoading ? 'Synchronisation' : 'A jour'}</strong>
         </div>
         <div>
           <span>Backend</span>
@@ -653,7 +695,7 @@ function App() {
               ))
             ) : (
               <li className="empty-line">
-                <Zap size={16} />
+                <CalendarClock size={16} />
                 Aucun rappel ouvert.
               </li>
             )}
