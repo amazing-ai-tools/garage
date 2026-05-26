@@ -39,6 +39,10 @@ function ensureBugZeroWidget() {
     return;
   }
 
+  if (window.matchMedia('(max-width: 760px)').matches) {
+    return;
+  }
+
   const script = document.createElement('script');
   script.src = bugzeroWidgetUrl;
   script.async = true;
