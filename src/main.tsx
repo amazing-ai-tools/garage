@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import {
+  Activity,
   CalendarClock,
   Car,
   CircleDollarSign,
@@ -10,7 +11,9 @@ import {
   PackageCheck,
   Plus,
   RefreshCw,
+  ShieldCheck,
   Wrench,
+  Zap,
 } from 'lucide-react';
 import {
   buildApiUrl,
@@ -104,6 +107,20 @@ const defaultReminderForm: ReminderFormState = {
 
 function selectVehicleName(vehicles: Vehicle[], vehicleId: number): string {
   return vehicles.find((vehicle) => vehicle.id === vehicleId)?.name || 'Vehicule';
+}
+
+function formatKm(value: number | null | undefined): string {
+  return `${Number(value || 0).toLocaleString('fr-FR')} km`;
+}
+
+function getInitials(user: CurrentUser): string {
+  const source = user.name || user.email;
+  return source
+    .split(/[\s@._-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
 }
 
 function VehicleSelect({
@@ -236,14 +253,17 @@ function App() {
 
   const summary = data?.summary;
   const firstVehicle = summary?.vehicles[0];
+  const userLabel = currentUser ? currentUser.name || currentUser.email : '';
 
   if (isCheckingAuth) {
     return (
       <main className="app-shell auth-shell">
-        <section className="auth-panel">
-          <span className="eyebrow">Garage connecte</span>
+        <section className="auth-panel loading-card">
+          <span className="brand-mark">G</span>
+          <span className="eyebrow">Garage sport</span>
           <h1>Verification de la session</h1>
-          <p>Connexion au backend garage...</p>
+          <p>Connexion securisee au paddock...</p>
+          <div className="loading-bar" aria-hidden="true" />
         </section>
       </main>
     );
@@ -252,15 +272,45 @@ function App() {
   if (!currentUser) {
     return (
       <main className="app-shell auth-shell">
-        <section className="auth-panel">
-          <span className="eyebrow">Garage prive</span>
-          <h1>Connecte-toi avec Google</h1>
-          <p>Ton parc, tes depenses, tes pieces et tes rappels restent associes a ton compte.</p>
-          {error ? <code>{error}</code> : null}
-          <a className="login-button" href={buildApiUrl(apiBaseUrl, '/api/auth/google/login')}>
-            <LogIn size={18} />
-            Continuer avec Google
-          </a>
+        <section className="auth-hero">
+          <div className="auth-copy">
+            <span className="brand-mark">G</span>
+            <span className="eyebrow">Garage sport</span>
+            <h1>Ton cockpit pour suivre chaque machine.</h1>
+            <p>
+              Centralise vehicules, couts, pieces et rappels dans une interface rapide, securisee
+              par ton compte Google.
+            </p>
+            {error ? <code>{error}</code> : null}
+            <a className="login-button" href={buildApiUrl(apiBaseUrl, '/api/auth/google/login')}>
+              <LogIn size={18} />
+              Continuer avec Google
+            </a>
+          </div>
+          <aside className="auth-dashboard" aria-label="Apercu garage">
+            <div className="dash-topline">
+              <span>Track mode</span>
+              <strong>ONLINE</strong>
+            </div>
+            <div className="speed-ring">
+              <span>87</span>
+              <small>score entretien</small>
+            </div>
+            <div className="auth-stat-grid">
+              <span>
+                <b>4</b>
+                Vehicules
+              </span>
+              <span>
+                <b>12</b>
+                Rappels
+              </span>
+              <span>
+                <b>0,21</b>
+                EUR/km
+              </span>
+            </div>
+          </aside>
         </section>
       </main>
     );
@@ -269,12 +319,19 @@ function App() {
   return (
     <main className="app-shell">
       <header className="topbar">
-        <div>
-          <span className="eyebrow">Garage connecte</span>
-          <h1>Suivi vehicules, pieces et entretiens</h1>
-          <p className="user-line">{currentUser.name || currentUser.email}</p>
+        <div className="brand-cluster">
+          <span className="brand-mark">G</span>
+          <div>
+            <span className="eyebrow">Garage sport</span>
+            <h1>Controle vehicules, pieces et entretiens</h1>
+            <p className="user-line">Pilote: {userLabel}</p>
+          </div>
         </div>
         <div className="topbar-actions">
+          <span className="session-pill">
+            <ShieldCheck size={16} />
+            Session Google
+          </span>
           <button className="icon-button" type="button" onClick={refresh} aria-label="Rafraichir">
             <RefreshCw size={18} />
           </button>
@@ -292,23 +349,38 @@ function App() {
         </section>
       ) : null}
 
+      <section className="race-strip" aria-label="Etat garage">
+        <div>
+          <span>Mode atelier</span>
+          <strong>{isLoading ? 'Synchronisation' : 'Pret a rouler'}</strong>
+        </div>
+        <div>
+          <span>Backend</span>
+          <strong>{apiBaseUrl.replace(/^https?:\/\//, '')}</strong>
+        </div>
+        <div>
+          <span>Profil</span>
+          <strong>{getInitials(currentUser)}</strong>
+        </div>
+      </section>
+
       <section className="metric-grid" aria-label="Indicateurs garage">
-        <article>
+        <article className="metric-card">
           <Car size={20} />
           <span>Vehicules</span>
           <strong>{isLoading ? '...' : summary?.vehicle_count ?? 0}</strong>
         </article>
-        <article>
+        <article className="metric-card highlight">
           <CircleDollarSign size={20} />
           <span>Depenses totales</span>
           <strong>{isLoading ? '...' : formatEuros(summary?.total_expenses)}</strong>
         </article>
-        <article>
+        <article className="metric-card">
           <CalendarClock size={20} />
           <span>Rappels ouverts</span>
           <strong>{isLoading ? '...' : summary?.open_reminder_count ?? 0}</strong>
         </article>
-        <article>
+        <article className="metric-card">
           <Gauge size={20} />
           <span>Cout/km principal</span>
           <strong>
@@ -322,7 +394,7 @@ function App() {
           <div className="panel-heading">
             <div>
               <span className="eyebrow">Parc</span>
-              <h2>Vehicules</h2>
+              <h2>Garage actif</h2>
             </div>
             <Car size={22} />
           </div>
@@ -339,7 +411,7 @@ function App() {
                       </span>
                     </div>
                     <div>
-                      <span>{vehicle.odometer_km.toLocaleString('fr-FR')} km</span>
+                      <span>{formatKm(vehicle.odometer_km)}</span>
                       <span>{formatEuros(vehicleSummary?.expense_total)}</span>
                     </div>
                   </article>
@@ -532,20 +604,27 @@ function App() {
         <article className="panel">
           <div className="panel-heading">
             <h2>Depenses recentes</h2>
-            <Wrench size={20} />
+            <Activity size={20} />
           </div>
           <ul className="event-list">
-            {data?.expenses.slice(0, 6).map((expense) => (
-              <li key={expense.id}>
-                <div>
-                  <strong>{expense.description}</strong>
-                  <span>
-                    {selectVehicleName(data.vehicles, expense.vehicle_id)} - {expense.date}
-                  </span>
-                </div>
-                <b>{formatEuros(expense.amount)}</b>
+            {data?.expenses.length ? (
+              data.expenses.slice(0, 6).map((expense) => (
+                <li key={expense.id}>
+                  <div>
+                    <strong>{expense.description}</strong>
+                    <span>
+                      {selectVehicleName(data.vehicles, expense.vehicle_id)} - {expense.date}
+                    </span>
+                  </div>
+                  <b>{formatEuros(expense.amount)}</b>
+                </li>
+              ))
+            ) : (
+              <li className="empty-line">
+                <Wrench size={16} />
+                Aucune depense enregistree.
               </li>
-            ))}
+            )}
           </ul>
         </article>
 
@@ -555,18 +634,25 @@ function App() {
             <CalendarClock size={20} />
           </div>
           <ul className="event-list">
-            {data?.reminders.slice(0, 6).map((reminder) => (
-              <li key={reminder.id}>
-                <div>
-                  <strong>{reminder.title}</strong>
-                  <span>
-                    {selectVehicleName(data.vehicles, reminder.vehicle_id)}
-                    {reminder.due_date ? ` - ${reminder.due_date}` : ''}
-                  </span>
-                </div>
-                <b>{reminder.due_odometer_km ? `${reminder.due_odometer_km.toLocaleString('fr-FR')} km` : 'Date'}</b>
+            {data?.reminders.length ? (
+              data.reminders.slice(0, 6).map((reminder) => (
+                <li key={reminder.id}>
+                  <div>
+                    <strong>{reminder.title}</strong>
+                    <span>
+                      {selectVehicleName(data.vehicles, reminder.vehicle_id)}
+                      {reminder.due_date ? ` - ${reminder.due_date}` : ''}
+                    </span>
+                  </div>
+                  <b>{reminder.due_odometer_km ? formatKm(reminder.due_odometer_km) : 'Date'}</b>
+                </li>
+              ))
+            ) : (
+              <li className="empty-line">
+                <Zap size={16} />
+                Aucun rappel ouvert.
               </li>
-            ))}
+            )}
           </ul>
         </article>
 
@@ -576,17 +662,24 @@ function App() {
             <PackageCheck size={20} />
           </div>
           <ul className="event-list">
-            {data?.parts.slice(0, 6).map((part) => (
-              <li key={part.id}>
-                <div>
-                  <strong>{part.name}</strong>
-                  <span>
-                    {selectVehicleName(data.vehicles, part.vehicle_id)} - {part.reference || 'Sans reference'}
-                  </span>
-                </div>
-                <b>{part.cost ? formatEuros(part.cost) : '-'}</b>
+            {data?.parts.length ? (
+              data.parts.slice(0, 6).map((part) => (
+                <li key={part.id}>
+                  <div>
+                    <strong>{part.name}</strong>
+                    <span>
+                      {selectVehicleName(data.vehicles, part.vehicle_id)} - {part.reference || 'Sans reference'}
+                    </span>
+                  </div>
+                  <b>{part.cost ? formatEuros(part.cost) : '-'}</b>
+                </li>
+              ))
+            ) : (
+              <li className="empty-line">
+                <PackageCheck size={16} />
+                Aucune piece suivie.
               </li>
-            ))}
+            )}
           </ul>
         </article>
       </section>
